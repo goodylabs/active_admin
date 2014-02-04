@@ -8,10 +8,10 @@ module ActiveAdmin
 
         def title
           case config[:title]
-          when Proc then controller.instance_eval(&config[:title])
+          when Proc   then controller.instance_exec &config[:title]
           when String then config[:title]
           else
-            active_admin_config.plural_resource_label
+            assigns[:page_title] || active_admin_config.plural_resource_label
           end
         end
 

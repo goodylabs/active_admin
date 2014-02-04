@@ -67,6 +67,9 @@ module ActiveAdmin
     # The namespace root.
     inheritable_setting :root_to, 'dashboard#index'
 
+    # Display breadcrumbs
+    inheritable_setting :breadcrumb, true
+
     # Default CSV options
     inheritable_setting :csv_options, {:col_sep => ','}
 
@@ -172,6 +175,12 @@ module ActiveAdmin
       end
     end
 
+    def load(file)
+      super
+    rescue ActiveRecord::StatementInvalid => exception
+      raise DatabaseHitDuringLoad.new exception
+    end
+
     # Returns ALL the files to be loaded
     def files
       load_paths.flatten.compact.uniq.map{ |path| Dir["#{path}/**/*.rb"] }.flatten
@@ -191,12 +200,13 @@ module ActiveAdmin
     # Example usage:
     #   ActiveAdmin.before_filter :authenticate_admin!
     #
-    %w(before_filter skip_before_filter after_filter around_filter skip_filter).each do |name|
+    %w(before_filter skip_before_filter after_filter skip_after_filter around_filter skip_filter).each do |name|
       define_method name do |*args, &block|
         ActiveAdmin::BaseController.send              name, *args, &block
         ActiveAdmin::Devise::PasswordsController.send name, *args, &block
         ActiveAdmin::Devise::SessionsController.send  name, *args, &block
         ActiveAdmin::Devise::UnlocksController.send   name, *args, &block
+        ActiveAdmin::Devise::RegistrationsController.send name, *args, &block
       end
     end
 
@@ -215,11 +225,8 @@ module ActiveAdmin
     # As well, we have to remove it from +eager_load_paths+ to prevent the
     # files from being loaded twice in production.
     def remove_active_admin_load_paths_from_rails_autoload_and_eager_load
-      ActiveSupport::Dependencies.autoload_paths.reject!{ |path| load_paths.include? path }
-      Rails.application.config.eager_load_paths = # the array is frozen :/
-      Rails.application.config.eager_load_paths.reject do |path|
-        load_paths.include?(path) 
-      end
+      ActiveSupport::Dependencies.autoload_paths -= load_paths
+      Rails.application.config.eager_load_paths  -= load_paths
     end
 
     # Hooks the app/admin directory into our Rails Engine's +watchable_dirs+, so the

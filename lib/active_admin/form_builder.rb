@@ -50,7 +50,7 @@ module ActiveAdmin
 
     def has_many(assoc, options = {}, &block)
       # remove options that should not render as attributes
-      custom_settings = :new_record, :allow_destroy, :heading
+      custom_settings = :new_record, :allow_destroy, :heading, :sortable
       builder_options = {new_record: true}.merge! options.slice  *custom_settings
       options         = {for: assoc      }.merge! options.except *custom_settings
       options[:class] = [options[:class], "inputs has_many_fields"].compact.join(' ')
@@ -68,25 +68,42 @@ module ActiveAdmin
           has_many_form.input :_destroy, as: :boolean, wrapper_html: {class: 'has_many_delete'},
                                                        label: I18n.t('active_admin.has_many_delete')
         end
+
+        if builder_options[:sortable]
+          has_many_form.input builder_options[:sortable], as: :hidden
+
+          contents << template.content_tag(:li, class: 'handle') do
+            Iconic.icon :move_vertical
+          end
+        end
+
         contents
+      end
+
+      # make sure that the sortable children sorted in stable ascending order
+      if column = builder_options[:sortable]
+        children = object.send(assoc)
+        children = children.sort_by {|o| [o.send(column), o.id]}
+        options[:for] = [assoc,  children]
       end
 
       html = without_wrapper do
         unless builder_options.key?(:heading) && !builder_options[:heading]
           form_buffers.last << template.content_tag(:h3) do
-            builder_options[:heading] || object.class.reflect_on_association(assoc).klass.model_name.human(count: 1.1)
+            builder_options[:heading] || object.class.reflect_on_association(assoc).klass.model_name.human(count: ::ActiveAdmin::Helpers::I18n::PLURAL_MANY_COUNT)
           end
         end
 
         inputs options, &form_block
 
         form_buffers.last << js_for_has_many(assoc, form_block, template, builder_options[:new_record]) if builder_options[:new_record]
+        form_buffers.last
       end
 
       form_buffers.last << if @already_in_an_inputs_block
-        template.content_tag :li,  html, class: "has_many_container #{assoc}"
+        template.content_tag :li,  html, class: "has_many_container #{assoc}", 'data-sortable' => builder_options[:sortable]
       else
-        template.content_tag :div, html, class: "has_many_container #{assoc}"
+        template.content_tag :div, html, class: "has_many_container #{assoc}", 'data-sortable' => builder_options[:sortable]
       end
     end
 

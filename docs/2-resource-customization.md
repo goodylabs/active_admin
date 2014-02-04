@@ -23,22 +23,32 @@ Use the `permit_params` method to define which attributes may be changed:
 
 ```ruby
 ActiveAdmin.register Post do
-  permit_params :title, :content, :author
+  permit_params :title, :content, :publisher_id
 end
 ```
 
-Alternatively, you can change which parameters may be changed at runtime
-by passing a block to permit_params:
+For nested associations in your form, this is how you define their attributes:
+
+```ruby
+ActiveAdmin.register Post do
+  permit_params :title, :content, :publisher_id,
+    tags_attributes: [:id, :name, :description, :_destroy]
+end
+
+# Note that `accepts_nested_attributes_for` is still required:
+class Post < ActiveRecord::Base
+  accepts_nested_attributes_for :tags, allow_destroy: true
+end
+```
+
+If you want to dynamically choose which attributes can be set, pass a block:
 
 ```ruby
 ActiveAdmin.register Post do
   permit_params do
-    defaults = [:title, :content]
-    if current_user.admin?
-      defaults + [:author]
-    else
-      defaults
-    end
+    params = [:title, :content, :publisher_id]
+    params.push :author_id if current_user.admin?
+    params
   end
 end
 ```
@@ -64,9 +74,6 @@ ActiveAdmin.register Post, as: "Article"
 ```
 
 The resource will then be available at `/admin/articles`.
-
-This will also change the key of the resource params passed to the controller.
-In Rails 4, the `permitted_params` key will need to be changed from `:post` to `:article`.
 
 ## Customize the Namespace
 

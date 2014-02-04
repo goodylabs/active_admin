@@ -12,7 +12,7 @@ module ActiveAdmin
         @_active_admin_source_root ||= File.expand_path("../templates", __FILE__)
       end
 
-			def copy_initializer
+      def copy_initializer
         @underscored_user_name = name.underscore
         template 'active_admin.rb.erb', 'config/initializers/active_admin.rb'
       end
@@ -30,7 +30,7 @@ module ActiveAdmin
         if ARGV.include? "--skip-users"
           route "ActiveAdmin.routes(self)"
         else # Ensure Active Admin routes occur after Devise routes so that Devise has higher priority
-          inject_into_file "config/routes.rb", "\n  ActiveAdmin.routes(self)", :after => /devise_for.*/
+          inject_into_file "config/routes.rb", "\n  ActiveAdmin.routes(self)", :after => /devise_for .*, ActiveAdmin::Devise\.config/
         end
       end
 

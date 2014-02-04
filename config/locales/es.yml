@@ -53,7 +53,8 @@ es:
     any: "Cualquiera"
     batch_actions:
       button_label: "Acciones en masa"
-      delete_confirmation: "Eliminar %{plural_model}: ¿Está seguro? No podrá deshacer esta acción."
+      default_confirmation: "¿Seguro que quieres hacer esto?"
+      delete_confirmation: "Eliminar %{plural_model}: ¿Está seguro?"
       succesfully_destroyed:
         one: "Se ha destruido 1 %{model} con éxito"
         other: "Se han destruido %{count} %{plural_model} con éxito"
@@ -83,6 +84,9 @@ es:
       change_password:
         title: "Cambie su contraseña"
         submit: "Cambiar mi contraseña"
+      resend_confirmation_instructions:
+          title: "Reenviar instrucciones de confirmación"
+          submit: "Reenviar instrucciones de confirmación"
       links:
         sign_in: "registrarse"
         forgot_your_password: "¿Olvidó su contraseña?"

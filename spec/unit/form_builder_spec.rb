@@ -273,11 +273,8 @@ describe ActiveAdmin::FormBuilder do
       end
 
       it "should translate the association name in header" do
-        begin
-          I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
+        with_translation activerecord: {models: {post: {one: 'Blog Post', other: 'Blog Posts'}}} do
           body.should have_tag('h3', 'Blog Posts')
-        ensure
-          I18n.backend.reload!
         end
       end
 
@@ -286,20 +283,14 @@ describe ActiveAdmin::FormBuilder do
       end
 
       it "should translate the association name in has many new button" do
-        begin
-          I18n.backend.store_translations(:en, :activerecord => { :models => { :post => { :one => "Blog Post", :other => "Blog Posts" } } })
+        with_translation activerecord: {models: {post: {one: 'Blog Post', other: 'Blog Posts'}}} do
           body.should have_tag('a', 'Add New Blog Post')
-        ensure
-          I18n.backend.reload!
         end
       end
 
       it "should translate the attribute name" do
-        begin
-          I18n.backend.store_translations :en, :activerecord => { :attributes => { :post => { :title => 'A very nice title' } } }
+        with_translation activerecord: {attributes: {post: {title: 'A very nice title'}}} do
           body.should have_tag 'label', 'A very nice title'
-        ensure
-          I18n.backend.reload!
         end
       end
 
@@ -369,6 +360,9 @@ describe ActiveAdmin::FormBuilder do
         body.should_not have_tag('a', 'Add New Post')
       end
 
+      it "should render the nested form" do
+        body.should have_tag("input", :attributes => {:name => "category[posts_attributes][0][title]"})
+      end
     end
 
     describe "with custom heading" do
@@ -444,6 +438,25 @@ describe ActiveAdmin::FormBuilder do
         it "should not have a check box with 'Remove' as its label" do
           body.should_not have_tag("label", :attributes => {:for => "category_posts_attributes_0__destroy"}, :content => "Remove")
         end
+      end
+    end
+
+    describe "sortable" do
+      # TODO: it doesn't make any sense to use your foreign key as something that's sortable (and therefore editable)
+      context "with a new post" do
+        let :body do
+          build_form({:url => '/categories'}, Category.new) do |f|
+            f.object.posts.build
+            f.has_many :posts, sortable: :custom_category_id do |p|
+              p.input :title
+            end
+          end
+        end
+
+        it "shows the nested fields for unsaved records" do
+          body.should have_tag("fieldset", :attributes => {:class => "inputs has_many_fields"})
+        end
+
       end
     end
 

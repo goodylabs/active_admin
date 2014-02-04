@@ -53,7 +53,8 @@
       link: "新建一个"
     batch_actions:
       button_label: "批处理"
-      delete_confirmation: "你确定要删除所有%{plural_model}? 如果执行，将不可恢复."
+      default_confirmation: "你确定你要这样做？"
+      delete_confirmation: "你确定要删除所有%{plural_model}?"
       succesfully_destroyed:
         one: "成功删除 1 %{model}"
         other: "成功删除 %{count} %{plural_model}"
@@ -91,10 +92,15 @@
       unlock:
         title: "重新发送送解锁命令"
         submit: "重新发送送解锁命令"
+      resend_confirmation_instructions:
+        title: " 重新发送确认指示"
+        submit: " 重新发送确认指示"
       links:
         sign_in: "登录"
         forgot_your_password: "忘记了密码？"
         sign_in_with_omniauth_provider: "登入%{provider}"
+    access_denied:
+      message: "您无权处理此操作"
   formtastic:
     yes: "YES"
     no: "NO"
