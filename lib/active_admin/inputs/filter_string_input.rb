@@ -16,9 +16,10 @@ module ActiveAdmin
           end
         else
           super # SearchMethodSelect#to_html
-        input_wrapping do
-          label_html <<
-          builder.text_field(input_name, input_html_options)
+          input_wrapping do
+            label_html <<
+            builder.text_field(input_name, input_html_options)
+	  end
         end
       end
 
