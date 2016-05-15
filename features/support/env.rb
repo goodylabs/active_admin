@@ -4,9 +4,9 @@
 # instead of editing this one. Cucumber will automatically load all features/**/*.rb
 # files.
 
-ENV["RAILS_ENV"] ||= "cucumber"
+ENV['RAILS_ENV'] = 'test'
 
-require File.expand_path('../../../spec/spec_helper_without_rails', __FILE__)
+require File.expand_path('../../../spec/spec_helper', __FILE__)
 
 ENV['RAILS_ROOT'] = File.expand_path("../../../spec/rails/rails-#{ENV["RAILS"]}", __FILE__)
 
@@ -18,6 +18,7 @@ end
 require 'rails'
 require 'active_record'
 require 'active_admin'
+require 'devise'
 ActiveAdmin.application.load_paths = [ENV['RAILS_ROOT'] + "/app/admin"]
 
 require ENV['RAILS_ROOT'] + '/config/environment'
@@ -28,11 +29,29 @@ autoload :ActiveAdmin, 'active_admin'
 
 require 'cucumber/rails'
 
-require 'cucumber/rspec/doubles'
+require 'rspec/mocks'
+World(RSpec::Mocks::ExampleMethods)
+
+Before do
+  RSpec::Mocks.setup
+end
+
+After do
+  begin
+    RSpec::Mocks.verify
+  ensure
+    RSpec::Mocks.teardown
+  end
+end
 
 require 'capybara/rails'
 require 'capybara/cucumber'
 require 'capybara/session'
+require 'capybara/poltergeist'
+require 'phantomjs/poltergeist'
+
+Capybara.javascript_driver = :poltergeist
+
 # Capybara defaults to XPath selectors rather than Webrat's default of CSS3. In
 # order to ease the transition to Capybara we set the default here. If you'd
 # prefer to use XPath just remove this line and adjust any selectors in your
@@ -62,7 +81,12 @@ ActionController::Base.allow_rescue = false
 # after each scenario, which can lead to hard-to-debug failures in
 # subsequent scenarios. If you do this, we recommend you create a Before
 # block that will explicitly put your database in a known state.
-Cucumber::Rails::World.use_transactional_fixtures = false
+if ActiveAdmin::Dependency.rails5?
+  Cucumber::Rails::World.use_transactional_tests = true
+else
+  Cucumber::Rails::World.use_transactional_fixtures = true
+end
+
 # How to clean your database when transactions are turned off. See
 # http://github.com/bmabey/database_cleaner for more info.
 if defined?(ActiveRecord::Base)
@@ -70,7 +94,8 @@ if defined?(ActiveRecord::Base)
     require 'database_cleaner'
     require 'database_cleaner/cucumber'
     DatabaseCleaner.strategy = :truncation
-  rescue LoadError => ignore_if_database_cleaner_not_present
+  rescue LoadError
+    # ignore if database_cleaner isn't present
   end
 end
 
@@ -87,7 +112,6 @@ After do
 end
 
 Before do
-
   begin
     # We are caching classes, but need to manually clear references to
     # the controllers. If they aren't clear, the router stores references
@@ -100,6 +124,15 @@ Before do
     p $!
     raise $!
   end
+end
+
+# Force deprecations to raise an exception.
+# This would set `behavior = :raise`, but that wasn't added until Rails 4.
+ActiveSupport::Deprecation.behavior = -> message, callstack do
+  e = StandardError.new message
+  e.set_backtrace callstack.map(&:to_s)
+  puts e # sometimes Cucumber otherwise won't show the error message
+  raise e
 end
 
 # improve the performance of the specs suite by not logging anything
@@ -116,4 +149,11 @@ end
 # Don't run @rails4 tagged features for versions before Rails 4.
 Before('@rails4') do |scenario|
   scenario.skip_invoke! if Rails::VERSION::MAJOR < 4
+end
+
+Around '@silent_unpermitted_params_failure' do |scenario, block|
+  original = ActionController::Parameters.action_on_unpermitted_parameters
+  ActionController::Parameters.action_on_unpermitted_parameters = false
+  block.call
+  ActionController::Parameters.action_on_unpermitted_parameters = original
 end

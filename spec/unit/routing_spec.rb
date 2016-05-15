@@ -1,20 +1,33 @@
 # encoding: utf-8
 
-require 'spec_helper'
+require 'rails_helper'
 
-describe ActiveAdmin, "Routing", :type => :routing do
+describe ActiveAdmin, "Routing", type: :routing do
 
   before do
     load_defaults!
     reload_routes!
   end
 
+  after :all do
+    load_defaults!
+    reload_routes!
+  end
+
   it "should only have the namespaces necessary for route testing" do
-    ActiveAdmin.application.namespaces.keys.should eq [:admin, :root]
+    expect(ActiveAdmin.application.namespaces.names).to eq [:admin, :root]
   end
 
   it "should route to the admin dashboard" do
     expect(get('/admin')).to route_to 'admin/dashboard#index'
+  end
+
+  describe "root path helper" do
+    context "when in admin namespace" do
+      it "should be admin_root_path" do
+        expect(admin_root_path).to eq "/admin"
+      end
+    end
   end
 
   describe "standard resources" do
@@ -38,7 +51,7 @@ describe ActiveAdmin, "Routing", :type => :routing do
 
     context "when in root namespace" do
       before(:each) do
-        load_resources { ActiveAdmin.register(Post, :namespace => false) }
+        load_resources { ActiveAdmin.register(Post, namespace: false) }
       end
 
       it "should route the index path" do
@@ -67,36 +80,36 @@ describe ActiveAdmin, "Routing", :type => :routing do
         end
 
         it "should default to GET" do
-          expect({:get  => "/admin/posts/1/do_something"}).to     be_routable
-          expect({:post => "/admin/posts/1/do_something"}).to_not be_routable
+          expect({get: "/admin/posts/1/do_something"}).to      be_routable
+          expect({post: "/admin/posts/1/do_something"}).to_not be_routable
         end
       end
 
       context "with one http verb" do
         before do
           load_resources do
-            ActiveAdmin.register(Post){ member_action "do_something", :method => :post }
+            ActiveAdmin.register(Post){ member_action "do_something", method: :post }
           end
         end
 
         it "should properly route" do
-          expect({:post => "/admin/posts/1/do_something"}).to be_routable
+          expect({post: "/admin/posts/1/do_something"}).to be_routable
         end
       end
 
       context "with two http verbs" do
         before do
           load_resources do
-            ActiveAdmin.register(Post){ member_action "do_something", :method => [:put, :delete] }
+            ActiveAdmin.register(Post){ member_action "do_something", method: [:put, :delete] }
           end
         end
 
         it "should properly route the first verb" do
-          expect({:put => "/admin/posts/1/do_something"}).to be_routable
+          expect({put: "/admin/posts/1/do_something"}).to be_routable
         end
 
         it "should properly route the second verb" do
-          expect({:delete => "/admin/posts/1/do_something"}).to be_routable
+          expect({delete: "/admin/posts/1/do_something"}).to be_routable
         end
       end
     end
@@ -123,7 +136,7 @@ describe ActiveAdmin, "Routing", :type => :routing do
       before do
         load_resources do
           ActiveAdmin.register(Post) do
-            belongs_to :user, :optional => true
+            belongs_to :user, optional: true
           end
           ActiveAdmin.register(User) do
             collection_action "do_something"
@@ -147,25 +160,25 @@ describe ActiveAdmin, "Routing", :type => :routing do
       it "should route to the page under /admin" do
         expect(admin_chocolate_i_love_you_path).to eq "/admin/chocolate_i_love_you"
       end
+    end
 
-      context "when in the root namespace" do
-        before(:each) do
-          load_resources { ActiveAdmin.register_page("Chocolate I lØve You!", :namespace => false) }
-        end
-
-        it "should route to page under /" do
-          expect(chocolate_i_love_you_path).to eq "/chocolate_i_love_you"
-        end
+    context "when in the root namespace" do
+      before(:each) do
+        load_resources { ActiveAdmin.register_page("Chocolate I lØve You!", namespace: false) }
       end
 
-      context "when singular page name" do
-        before(:each) do
-          load_resources { ActiveAdmin.register_page("Log") }
-        end
+      it "should route to page under /" do
+        expect(chocolate_i_love_you_path).to eq "/chocolate_i_love_you"
+      end
+    end
 
-        it "should not inject _index_ into the route name" do
-          expect(admin_log_path).to eq "/admin/log"
-        end
+    context "when singular page name" do
+      before(:each) do
+        load_resources { ActiveAdmin.register_page("Log") }
+      end
+
+      it "should not inject _index_ into the route name" do
+        expect(admin_log_path).to eq "/admin/log"
       end
     end
   end

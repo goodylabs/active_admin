@@ -8,7 +8,7 @@ Here are a few common configurations:
 Active Admin requires two settings to authenticate and use the current user
 within your application.
 
-+ the method controllers use to force authentication
++ the method controllers used to force authentication
 
 ```ruby
 config.authentication_method = :authenticate_admin_user!
@@ -37,14 +37,25 @@ config.site_title       = "My Admin Site"
 config.site_title_link  = "/"
 config.site_title_image = "site_image.png"
 config.site_title_image = "http://www.google.com/images/logos/google_logo_41.png"
+config.site_title_image = ->(context) { context.current_user.company.logo_url }
 ```
 
 ## Internationalization (I18n)
 
 To translate Active Admin to a new language or customize an existing translation, you can copy
-[config/locales/en.yml](https://github.com/gregbell/active_admin/blob/master/config/locales/en.yml)
+[config/locales/en.yml](https://github.com/activeadmin/activeadmin/blob/master/config/locales/en.yml)
 to your application's `config/locales` folder and update it. We welcome new/updated translations,
-so feel free to [contribute!](https://github.com/gregbell/active_admin/blob/master/CONTRIBUTING.md)
+so feel free to [contribute](https://github.com/activeadmin/activeadmin/blob/master/CONTRIBUTING.md)!
+To translate third party gems like devise, use for example devise-i18n.
+
+## Localize Format For Dates and Times
+
+Active Admin sets `:long` as default localize format for dates and times.
+If you want, you can customize it.
+
+```ruby
+config.localize_format = :short
+```
 
 ## Namespaces
 
@@ -102,13 +113,13 @@ undesired. To disable comments:
 ```ruby
 # For the entire application:
 ActiveAdmin.setup do |config|
-  config.allow_comments = false
+  config.comments = false
 end
 
 # For a namespace:
 ActiveAdmin.setup do |config|
   config.namespace :admin do |admin|
-    admin.allow_comments = false
+    admin.comments = false
   end
 end
 
@@ -116,6 +127,28 @@ end
 ActiveAdmin.register Post do
   config.comments = false
 end
+```
+
+You can change the name under which comments are registered:
+
+```ruby
+config.comments_registration_name = 'AdminComment'
+```
+
+You can change the order for the comments and you can change the column to be
+used for ordering:
+```ruby
+config.comments_order = 'created_at ASC'
+```
+
+You can disable the menu item for the comments index page:
+```ruby
+config.comments_menu = false
+```
+
+You can customize the comment menu:
+```ruby
+config.comments_menu = { parent: 'Admin', priority: 1 }
 ```
 
 ## Utility Navigation

@@ -27,6 +27,7 @@ module ActiveAdmin
       def [](id)
         @children[normalize_id(id)]
       end
+
       def []=(id, child)
         @children[normalize_id(id)] = child
       end
@@ -47,9 +48,9 @@ module ActiveAdmin
       #
       def add(options)
         item = if parent = options.delete(:parent)
-          (self[parent] || add(:label => parent)).add options
+          (self[parent] || add(label: parent)).add options
         else
-          _add options.merge :parent => self
+          _add options.merge parent: self
         end
 
         yield(item) if block_given?
@@ -92,7 +93,7 @@ module ActiveAdmin
       def normalize_id(id)
         case id
         when String, Symbol, ActiveModel::Name
-          id.to_s.downcase.gsub ' ', '_'
+          id.to_s.downcase.tr ' ', '_'
         when ActiveAdmin::Resource::Name
           id.param_key
         else

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 
 def it_should_have_view(key, value)
   it "should have #{value} for view key '#{key}'" do
@@ -14,8 +14,6 @@ describe ActiveAdmin::ViewFactory do
   it_should_have_view :action_items,         ActiveAdmin::Views::ActionItems
   it_should_have_view :header,               ActiveAdmin::Views::Header
   it_should_have_view :blank_slate,          ActiveAdmin::Views::BlankSlate
-  it_should_have_view :action_list_popover,  ActiveAdmin::Views::ActionListPopover
-
   it_should_have_view :layout,               ActiveAdmin::Views::Pages::Layout
 
 end

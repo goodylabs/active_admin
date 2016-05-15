@@ -35,11 +35,11 @@ module MethodOrProcHelper
   #     call_method_or_proc_on(@my_obj, proc)
   #
   # By default, the Proc will be instance_exec'd within self. If you would rather
-  # not instance exec, but just call the Proc, then pass along `:exec => false` in
+  # not instance exec, but just call the Proc, then pass along `exec: false` in
   # the options hash.
   #
   #     proc = Proc.new{|s| s.size }
-  #     call_method_or_proc_on(@my_obj, proc, :exec => false)
+  #     call_method_or_proc_on(@my_obj, proc, exec: false)
   #
   # You can pass along any necessary arguments to the method / Proc as arguments. For
   # example:
@@ -47,13 +47,13 @@ module MethodOrProcHelper
   #     call_method_or_proc_on(@my_obj, :find, 1) #=> @my_obj.find(1)
   #
   def call_method_or_proc_on(receiver, *args)
-    options = { :exec => true }.merge(args.extract_options!)
+    options = { exec: true }.merge(args.extract_options!)
 
     symbol_or_proc = args.shift
 
     case symbol_or_proc
     when Symbol, String
-      receiver.send(symbol_or_proc.to_sym, *args)
+      receiver.public_send symbol_or_proc.to_sym, *args
     when Proc
       if options[:exec]
         instance_exec(receiver, *args, &symbol_or_proc)
@@ -76,16 +76,16 @@ module MethodOrProcHelper
     end
   end
 
-  # This method is different from the others in that it calls `instance_exec` on the reciever,
-  # passing it the proc. This evaluates the proc in the context of the reciever, thus changing
+  # This method is different from the others in that it calls `instance_exec` on the receiver,
+  # passing it the proc. This evaluates the proc in the context of the receiver, thus changing
   # what `self` means inside the proc.
   def render_in_context(context, obj, *args)
-    context ||= self # default to `self`
+    context = self if context.nil? # default to `self` only when nil
     case obj
     when Proc
       context.instance_exec *args, &obj
     when Symbol
-      context.send obj, *args
+      context.public_send obj, *args
     else
       obj
     end

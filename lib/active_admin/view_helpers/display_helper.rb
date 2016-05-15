@@ -15,7 +15,7 @@ module ActiveAdmin
       # Attempts to call any known display name methods on the resource.
       # See the setting in `application.rb` for the list of methods and their priority.
       def display_name(resource)
-        render_in_context resource, display_name_method_for(resource) if resource
+        render_in_context resource, display_name_method_for(resource) unless resource.nil?
       end
 
       # Looks up and caches the first available display name method.
@@ -40,24 +40,50 @@ module ActiveAdmin
         resource.class.reflect_on_all_associations.map(&:name)
       end
 
-      # Return a pretty string for any object
-      # Date Time are formatted via #localize with :format => :long
-      # ActiveRecord and Mongoid objects are formatted via #auto_link
-      # We attempt to #display_name of any other objects
+      def format_attribute(resource, attr)
+        value = find_value resource, attr
+        value = pretty_format value                    if attr.is_a? Symbol
+        value = Arbre::Context.new{ status_tag value } if boolean_attr? resource, attr
+        value
+      end
+
+      def find_value(resource, attr)
+        if attr.is_a? Proc
+          attr.call resource
+        elsif attr =~ /\A(.+)_id\z/ && reflection_for(resource, $1.to_sym)
+          resource.public_send $1
+        elsif resource.respond_to? attr
+          resource.public_send attr
+        elsif resource.respond_to? :[]
+          resource[attr]
+        end
+      end
+
+      # Attempts to create a human-readable string for any object
       def pretty_format(object)
         case object
-        when String
-          object
-        when Arbre::Element
-          object
+        when String, Numeric, Symbol, Arbre::Element
+          object.to_s
         when Date, Time
-          localize(object, :format => :long)
-        when ->(obj){defined?(::ActiveRecord) && obj.is_a?(ActiveRecord::Base)}
-          auto_link(object)
-        when ->(obj){defined?(::Mongoid) && obj.class.included_modules.include?(Mongoid::Document)}
-          auto_link(object)
+          localize object, format: active_admin_application.localize_format
         else
-          display_name(object)
+          if defined?(::ActiveRecord) && object.is_a?(ActiveRecord::Base) ||
+             defined?(::Mongoid)      && object.class.include?(Mongoid::Document)
+            auto_link object
+          else
+            display_name object
+          end
+        end
+      end
+
+      def reflection_for(resource, method)
+        klass = resource.class
+        klass.reflect_on_association method if klass.respond_to? :reflect_on_association
+      end
+
+      def boolean_attr?(resource, attr)
+        if resource.class.respond_to? :columns_hash
+          column = resource.class.columns_hash[attr.to_s] and column.type == :boolean
         end
       end
 

@@ -1,5 +1,3 @@
-require 'inherited_resources'
-
 require 'active_admin/base_controller/authorization'
 require 'active_admin/base_controller/menu'
 require 'active_admin/base_controller/translation'
@@ -9,11 +7,17 @@ module ActiveAdmin
   # It implements ActiveAdmin controllers core features.
   class BaseController < ::InheritedResources::Base
     helper ::ActiveAdmin::ViewHelpers
+    helper_method :env
 
     layout :determine_active_admin_layout
 
-    before_filter :only_render_implemented_actions
-    before_filter :authenticate_active_admin_user
+    if ActiveAdmin::Dependency.rails >= 4
+      before_action :only_render_implemented_actions
+      before_action :authenticate_active_admin_user
+    else
+      before_filter :only_render_implemented_actions
+      before_filter :authenticate_active_admin_user
+    end
 
     class << self
       # Ensure that this method is available for the DSL
@@ -24,7 +28,7 @@ module ActiveAdmin
       attr_accessor :active_admin_config
     end
 
-    # By default Rails will render un-implemented actions when the view exists. Becuase Active
+    # By default Rails will render un-implemented actions when the view exists. Because Active
     # Admin allows you to not render any of the actions by using the #actions method, we need
     # to check if they are implemented.
     def only_render_implemented_actions
@@ -75,6 +79,11 @@ module ActiveAdmin
     #       that users can render any template inside Active Admin.
     def determine_active_admin_layout
       ACTIVE_ADMIN_ACTIONS.include?(params[:action].to_sym) ? false : 'active_admin'
+    end
+
+    def active_admin_root
+      controller, action = active_admin_namespace.root_to.split '#'
+      {controller: controller, action: action}
     end
 
   end

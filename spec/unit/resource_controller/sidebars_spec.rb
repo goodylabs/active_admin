@@ -1,16 +1,24 @@
-require 'spec_helper'
+require 'rails_helper'
 
-describe ActiveAdmin::ResourceController::Sidebars do
-  let(:controller){ Admin::PostsController }
+describe ActiveAdmin::ResourceController::Sidebars, type: :controller do
+  let(:klass){ Admin::PostsController }
+  render_views # https://github.com/rspec/rspec-rails/issues/860
+
+  before do
+    @controller = klass.new
+  end
 
   context 'without before_filter' do
     before do
       ActiveAdmin.register Post
+      reload_routes!
     end
 
-    subject { find_before_filter controller, :skip_sidebar! }
+    it 'does not set @skip_sidebar' do
+      get :index
 
-    it {should set_skip_sidebar_to nil}
+      expect(controller.instance_variable_get(:@skip_sidebar)).to eq nil
+    end
   end
 
   describe '#skip_sidebar!' do
@@ -18,29 +26,13 @@ describe ActiveAdmin::ResourceController::Sidebars do
       ActiveAdmin.register Post do
         before_filter :skip_sidebar!
       end
+      reload_routes!
     end
 
-    subject { find_before_filter controller, :skip_sidebar! }
+    it 'works' do
+      get :index
 
-    it { should set_skip_sidebar_to true }
-  end
-
-  def find_before_filter(controller, filter)
-    #raise controller._process_action_callbacks.map(&:filter).inspect
-    controller._process_action_callbacks.detect { |f| f.raw_filter == filter.to_sym }
-  end
-
-  RSpec::Matchers.define :set_skip_sidebar_to do |expected|
-    match do |filter|
-      klass = filter && filter.klass || controller
-      object = klass.new
-      object.send filter.raw_filter if filter
-      @actual = object.instance_variable_get(:@skip_sidebar)
-      expect(@actual).to eq expected
-    end
-
-    failure_message_for_should do |filter|
-      message = "expected before_filter to set @skip_sidebar to '#{expected}', but was '#{@actual}'"
+      expect(controller.instance_variable_get(:@skip_sidebar)).to eq true
     end
   end
-end
+end unless ActiveAdmin::Dependency.rails < 4

@@ -1,13 +1,25 @@
 desc "Creates a test rails app for the specs to run against"
-task :setup do
+task :setup, :parallel do |t, opts|
   require 'rails/version'
-  system("mkdir spec/rails") unless File.exists?("spec/rails")
-  system "bundle exec rails new spec/rails/rails-#{Rails::VERSION::STRING} -m spec/support/rails_template.rb"
-  Rake::Task['parallel:after_setup_hook'].invoke
+  if File.exists? dir = "spec/rails/rails-#{Shellwords.escape detect_rails_version}"
+    puts "test app #{dir} already exists; skipping"
+  else
+    system 'mkdir -p spec/rails'
+    args = %w[
+      -m\ spec/support/rails_template.rb
+      --skip-gemfile
+      --skip-bundle
+      --skip-git
+      --skip-turbolinks
+      --skip-test-unit
+    ]
+    system "#{'INSTALL_PARALLEL=yes' if opts[:parallel]} bundle exec rails new #{dir} #{args.join ' '}"
+    Rake::Task['parallel:after_setup_hook'].invoke if opts[:parallel]
+  end
 end
 
 desc "Run the full suite using 1 core"
-task test: ['spec:unit', 'spec:integration', 'cucumber', 'cucumber:class_reloading']
+task test: ['spec:unit', 'spec:request', 'cucumber', 'cucumber:class_reloading']
 
 require 'coveralls/rake/task'
 Coveralls::RakeTask.new
@@ -52,9 +64,9 @@ namespace :spec do
     t.pattern = "spec/unit/**/*_spec.rb"
   end
 
-  desc "Run the integration specs"
-  RSpec::Core::RakeTask.new(:integration) do |t|
-    t.pattern = "spec/integration/**/*_spec.rb"
+  desc "Run the request specs"
+  RSpec::Core::RakeTask.new(:request) do |t|
+    t.pattern = "spec/requests/**/*_spec.rb"
   end
 
 end

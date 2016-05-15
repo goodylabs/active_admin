@@ -1,6 +1,23 @@
-require 'spec_helper'
+require 'rails_helper'
 
 describe ActiveAdmin::Views::Columns do
+
+  describe "Rendering zero columns" do
+    let(:cols) do
+      render_arbre_component do
+        columns do
+        end
+      end
+    end
+
+    it "should have the class .columns" do
+      expect(cols.class_list).to include("columns")
+    end
+
+    it "should have one column" do
+      expect(cols.children.first.class_list).not_to include("column")
+    end
+  end
 
   describe "Rendering one column" do
     let(:cols) do
@@ -81,7 +98,7 @@ describe ActiveAdmin::Views::Columns do
     let(:cols) do
       render_arbre_component do
         columns do
-          column(:span => 2){ "Hello World" }
+          column(span: 2){ "Hello World" }
           column(){ "Hello World" }
           column(){ "Hello World" }
         end
@@ -102,7 +119,7 @@ describe ActiveAdmin::Views::Columns do
     let(:cols) do
       render_arbre_component do
         columns do
-          column(:max_width => "100px"){ "Hello World" }
+          column(max_width: "100px"){ "Hello World" }
           column(){ "Hello World" }
         end
       end
@@ -120,7 +137,7 @@ describe ActiveAdmin::Views::Columns do
       let(:cols) do
         render_arbre_component do
           columns do
-            column(:max_width => 100){ "Hello World" }
+            column(max_width: 100){ "Hello World" }
             column(){ "Hello World" }
           end
         end
@@ -138,7 +155,7 @@ describe ActiveAdmin::Views::Columns do
     let(:cols) do
       render_arbre_component do
         columns do
-          column(:min_width => "100px"){ "Hello World" }
+          column(min_width: "100px"){ "Hello World" }
           column(){ "Hello World" }
         end
       end
@@ -156,7 +173,7 @@ describe ActiveAdmin::Views::Columns do
       let(:cols) do
         render_arbre_component do
           columns do
-            column(:min_width => 100){ "Hello World" }
+            column(min_width: 100){ "Hello World" }
             column(){ "Hello World" }
           end
         end

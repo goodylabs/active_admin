@@ -4,6 +4,12 @@ Active Admin is a Ruby Gem.
 
 ```ruby
 gem 'activeadmin'
+
+# Plus integrations with:
+gem 'devise'
+gem 'cancan' # or cancancan
+gem 'draper'
+gem 'pundit'
 ```
 
 More accurately, it's a [Rails Engine](http://guides.rubyonrails.org/engines.html)
@@ -11,27 +17,37 @@ that can be injected into your existing Ruby on Rails application.
 
 ## Setting up Active Admin
 
-After installing the gem, you need to run the generator:
+After installing the gem, you need to run the generator. Here are your options:
 
-```sh
-rails g active_admin:install              # creates the AdminUser class
-rails g active_admin:install User         # uses an existing class
-rails g active_admin:install --skip-users # skips user authentication entirely
-```
+- If you don't want to use Devise, run it with `--skip-users`:
+  ```sh
+  rails g active_admin:install --skip-users
+  ```
+
+- If you want to use an existing user class, provide it as an argument:
+  ```sh
+  rails g active_admin:install User
+  ```
+
+- Otherwise, with no arguments we will create an `AdminUser` class to use with Devise:
+  ```sh
+  rails g active_admin:install
+  ```
 
 The generator adds these core files, among others:
 
 ```
 app/admin/dashboard.rb
 app/assets/javascripts/active_admin.js.coffee
-app/assets/stylesheets/active_admin.css.scss
+app/assets/stylesheets/active_admin.scss
 config/initializers/active_admin.rb
 ```
 
-Now, migrate your database and start the server:
+Now, migrate and seed your database before starting the server:
 
 ```sh
 rake db:migrate
+rake db:seed
 rails server
 ```
 
@@ -79,6 +95,18 @@ Kaminari.configure do |config|
 end
 ```
 
-[CHANGELOG]: https://github.com/gregbell/active_admin/blob/master/CHANGELOG.md
-[dashboard.rb]: https://github.com/gregbell/active_admin/blob/master/lib/generators/active_admin/install/templates/dashboard.rb
-[active_admin.rb]: https://github.com/gregbell/active_admin/blob/master/lib/generators/active_admin/install/templates/active_admin.rb.erb
+If you are also using [Draper](https://github.com/drapergem/draper), you may want to
+make sure `per_page_kaminari` is delegated correctly:
+
+```ruby
+Draper::CollectionDecorator.send :delegate, :per_page_kaminari
+```
+
+## simple_form
+
+If you're getting the error `wrong number of arguments (6 for 4..5)`, [read #2703].
+
+[CHANGELOG]: https://github.com/activeadmin/activeadmin/blob/master/CHANGELOG.md
+[dashboard.rb]: https://github.com/activeadmin/activeadmin/blob/master/lib/generators/active_admin/install/templates/dashboard.rb
+[active_admin.rb]: https://github.com/activeadmin/activeadmin/blob/master/lib/generators/active_admin/install/templates/active_admin.rb.erb
+[read #2703]: https://github.com/activeadmin/activeadmin/issues/2703#issuecomment-38140864

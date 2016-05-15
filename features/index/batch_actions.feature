@@ -1,5 +1,6 @@
 Feature: Batch Actions
 
+  @javascript
   Scenario: Use default (destroy) batch action
     Given 10 posts exist
     And an index configuration of:
@@ -16,10 +17,28 @@ Feature: Batch Actions
     And I follow "Batch Actions"
     Then I should see the batch action :destroy "Delete Selected"
 
-    Given I submit the batch action form with "destroy"
+    Given I click "Delete Selected" and accept confirmation
     Then I should see a flash with "Successfully destroyed 2 posts"
     And I should see 8 posts in the table
 
+  Scenario: Use default (destroy) batch action on a decorated resource
+    Given 5 posts exist
+    And an index configuration of:
+    """
+      ActiveAdmin.register Post do
+        decorate_with PostDecorator
+      end
+    """
+    When I check the 2nd record
+    And I check the 4th record
+    And I follow "Batch Actions"
+    Then I should see the batch action :destroy "Delete Selected"
+
+    Given I submit the batch action form with "destroy"
+    Then I should see a flash with "Successfully destroyed 2 posts"
+    And I should see 3 posts in the table
+
+  @javascript
   Scenario: Use default (destroy) batch action on a nested resource
     Given I am logged in
     And 5 posts written by "John Doe" exist
@@ -41,9 +60,22 @@ Feature: Batch Actions
     And I follow "Batch Actions"
     Then I should see the batch action :destroy "Delete Selected"
 
-    Given I submit the batch action form with "destroy"
+    Given I click "Delete Selected" and accept confirmation
     Then I should see a flash with "Successfully destroyed 2 posts"
     And I should see 3 posts in the table
+
+  Scenario: Disable display of batch action button if all nested buttons hide
+    Given 1 post exist
+    And an index configuration of:
+    """
+      ActiveAdmin.register Post do
+        batch_action :destroy, false
+        batch_action(:flag, if: proc { false } ) do
+          render text: 42
+        end
+      end
+      """
+    Then I should not see the batch action selector
 
   Scenario: Using a custom batch action
     Given 10 posts exist
@@ -121,3 +153,44 @@ Feature: Batch Actions
     Then I should see the batch action :very_complex_and_time_consuming "Very Complex and Time Consuming Selected"
     And I should see the batch action :passing_a_symbol "Passing A Symbol Selected"
 
+  Scenario: Use a Form with text
+    Given 10 posts exist
+    And an index configuration of:
+      """
+      ActiveAdmin.register Post do
+        batch_action :destroy, false
+        batch_action(:action_with_form, form: { name: :text }) {}
+      end
+      """
+
+    When I check the 1st record
+    And I follow "Batch Actions"
+    Then I should be show a input with name "name" and type "text"
+
+  Scenario: Use a Form with select
+    Given 10 posts exist
+    And an index configuration of:
+      """
+      ActiveAdmin.register Post do
+        batch_action :destroy, false
+        batch_action(:action_with_form, form: { type: ["a", "b"] }) {}
+      end
+      """
+
+    When I check the 1st record
+    And I follow "Batch Actions"
+    Then I should be show a select with name "type" with the values "a, b"
+
+  Scenario: Use a Form with select values from proc
+    Given 10 posts exist
+    And an index configuration of:
+      """
+      ActiveAdmin.register Post do
+        batch_action :destroy, false
+        batch_action(:action_with_form, form: ->{ {type: ["a", "b"]} }) {}
+      end
+      """
+
+    When I check the 1st record
+    And I follow "Batch Actions"
+    Then I should be show a select with name "type" with the values "a, b"

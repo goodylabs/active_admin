@@ -1,4 +1,4 @@
-require 'spec_helper'
+require 'rails_helper'
 
 describe ActiveAdmin::Namespace do
 
@@ -63,18 +63,18 @@ describe ActiveAdmin::Namespace do
 
     it "should set the block as a menu build callback" do
       namespace.build_menu do |menu|
-        menu.add :label => "menu item"
+        menu.add label: "menu item"
       end
 
-      expect(namespace.fetch_menu(:default)["menu item"]).to_not be_nil
+      expect(namespace.fetch_menu(:default)["menu item"]).to_not eq nil
     end
 
     it "should set a block on a custom menu" do
       namespace.build_menu :test do |menu|
-        menu.add :label => "menu item"
+        menu.add label: "menu item"
       end
 
-      expect(namespace.fetch_menu(:test)["menu item"]).to_not be_nil
+      expect(namespace.fetch_menu(:test)["menu item"]).to_not eq nil
     end
   end
 
@@ -82,20 +82,20 @@ describe ActiveAdmin::Namespace do
     let(:namespace){ ActiveAdmin::Namespace.new(application, :admin) }
     let(:menu) do
       namespace.build_menu :utility_navigation do |menu|
-        menu.add :label => "ActiveAdmin.info", :url => "http://www.activeadmin.info", :html_options => { :target => :blank }
-        namespace.add_logout_button_to_menu menu, 1, :class => "matt"
+        menu.add label: "ActiveAdmin.info", url: "http://www.activeadmin.info", html_options: { target: :blank }
+        namespace.add_logout_button_to_menu menu, 1, class: "matt"
       end
       namespace.fetch_menu(:utility_navigation)
     end
 
     it "should have a logout button to the far left" do
-      expect(menu["Logout"]).to_not be_nil
+      expect(menu["Logout"]).to_not eq nil
       expect(menu["Logout"].priority).to eq 1
     end
 
     it "should have a static link with a target of :blank" do
-      expect(menu["ActiveAdmin.info"]).to_not be_nil
-      expect(menu["ActiveAdmin.info"].html_options).to include(:target => :blank)
+      expect(menu["ActiveAdmin.info"]).to_not eq nil
+      expect(menu["ActiveAdmin.info"].html_options).to include(target: :blank)
     end
 
   end

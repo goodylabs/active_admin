@@ -5,7 +5,7 @@ module ActiveAdmin
       builder_method :attributes_table_for
 
       def build(obj, *attrs)
-        @collection     = obj.respond_to?(:each) && !obj.is_a?(Hash) ? obj : [obj]
+        @collection     = Array.wrap(obj)
         @resource_class = @collection.first.class
         options = { }
         options[:for] = @collection.first if single_record?
@@ -26,7 +26,7 @@ module ActiveAdmin
         if options[:class]
           classes << options[:class]
         elsif title.present?
-          classes << "row-#{title.to_s.parameterize('_')}"
+          classes << "row-#{ActiveAdmin::Dependency.rails.parameterize(title.to_s)}"
         end
         options[:class] = classes.join(' ')
 
@@ -59,41 +59,30 @@ module ActiveAdmin
           col # column for row headers
           @collection.each do |record|
             classes = Arbre::HTML::ClassList.new
-            classes << cycle(:even, :odd, :name => self.class.to_s)
+            classes << cycle(:even, :odd, name: self.class.to_s)
             classes << dom_class_name_for(record)
-            col(:id => dom_id_for(record), :class => classes)
+            col(id: dom_id_for(record), class: classes)
           end
         end
       end
 
       def header_content_for(attr)
         if @resource_class.respond_to?(:human_attribute_name)
-          @resource_class.human_attribute_name(attr, :default => attr.to_s.titleize)
+          @resource_class.human_attribute_name(attr, default: attr.to_s.titleize)
         else
           attr.to_s.titleize
         end
       end
 
       def empty_value
-        span I18n.t('active_admin.empty'), :class => "empty"
+        span I18n.t('active_admin.empty'), class: "empty"
       end
 
       def content_for(record, attr)
-        previous = current_arbre_element.to_s
-        value    = pretty_format find_attr_value(record, attr)
-        value.blank? && previous == current_arbre_element.to_s ? empty_value : value
-      end
-
-      def find_attr_value(record, attr)
-        if attr.is_a?(Proc)
-          attr.call(record)
-        elsif attr.to_s[/\A(.+)_id\z/] && record.respond_to?($1)
-          record.send($1)
-        elsif record.respond_to? attr
-          record.send(attr)
-        elsif record.respond_to? :[]
-          record[attr]
-        end
+        value = format_attribute record, attr
+        value.blank? && current_arbre_element.children.to_s.empty? ? empty_value : value
+        # Don't add the same Arbre twice, while still allowing format_attribute to call status_tag
+        current_arbre_element << value unless current_arbre_element.children.include? value
       end
 
       def single_record?

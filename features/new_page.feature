@@ -9,7 +9,10 @@ Feature: New Page
     Given a configuration of:
     """
       ActiveAdmin.register Post do
-        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR == 4
+        if Rails::VERSION::MAJOR >= 4
+          permit_params :custom_category_id, :author_id, :title,
+            :body, :position, :published_at, :starred
+        end
       end
     """
     When I am on the index page for posts
@@ -31,7 +34,7 @@ Feature: New Page
     Given a configuration of:
     """
       ActiveAdmin.register Post do
-        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR == 4
+        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR >= 4
 
         form do |f|
           f.inputs "Your Post" do
@@ -67,7 +70,7 @@ Feature: New Page
     Given a configuration of:
     """
       ActiveAdmin.register Post do
-        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR == 4
+        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR >= 4
 
         form :partial => "form"
       end
@@ -84,7 +87,7 @@ Feature: New Page
     Given a configuration of:
     """
       ActiveAdmin.register Post do
-        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR == 4
+        permit_params :custom_category_id, :author_id, :title, :body, :published_at, :starred if Rails::VERSION::MAJOR >= 4
 
         form do |f|
           f.inputs "Your Post" do

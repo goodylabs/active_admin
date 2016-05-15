@@ -47,9 +47,9 @@ module ActiveAdmin
     #        the class of the subject also. For example, Active Admin uses the class
     #        of the resource to decide if the resource should be displayed in the
     #        global navigation. To deal with this nicely in a case statement, take
-    #        a look at `#normalized(klasss)`
+    #        a look at `#normalized(klass)`
     #
-    # @returns [Boolean]
+    # @return [Boolean]
     def authorized?(action, subject = nil)
       true
     end
@@ -66,7 +66,7 @@ module ActiveAdmin
     #        one of the `ActiveAdmin::Auth::*` symbols. Defaults to `Auth::READ` if
     #        no action passed in.
     #
-    # @returns [ActiveRecord::Relation] A new collection, scoped to the
+    # @return [ActiveRecord::Relation] A new collection, scoped to the
     #          objects that the current user has access to.
     def scope_collection(collection, action = Auth::READ)
       collection

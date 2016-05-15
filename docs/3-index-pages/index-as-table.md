@@ -55,6 +55,8 @@ index do
 end
 ```
 
+## Defining Actions
+
 To setup links to View, Edit and Delete a resource, use the `actions` method:
 
 ```ruby
@@ -72,7 +74,7 @@ index do
   selectable_column
   column :title
   actions do |post|
-    link_to "Preview", admin_preview_post_path(post), class: "member_link"
+    item "Preview", admin_preview_post_path(post), class: "member_link"
   end
 end
 ```
@@ -83,10 +85,47 @@ Or forego the default links entirely:
 index do
   column :title
   actions defaults: false do |post|
-    link_to "View", admin_post_path(post)
+    item "View", admin_post_path(post)
+    item "Edit", edit_admin_post_path(post)
+    item "Delete", admin_post_path(post), method: :delete
   end
 end
 ```
+
+Or append custom action with custom html via arbre:
+
+```ruby
+index do
+  column :title
+  actions do |post|
+    a "View", href: admin_post_path(post)
+  end
+end
+```
+
+In case you prefer to list actions links in a dropdown menu:
+
+```ruby
+index do
+  selectable_column
+  column :title
+  actions dropdown: true do |post|
+    item "Preview", admin_preview_post_path(post)
+  end
+end
+```
+
+In addition, you can insert the position of the row in the greater collection by using the index_column special command:
+
+```ruby
+index do
+  selectable_column
+  index_column
+  column :title
+end
+```
+
+index_column take an optional offset parameter to allow a developer to set the starting number for the index (default is 1).
 
 ## Sorting
 
@@ -159,5 +198,16 @@ For example, if you were using CanCan:
 index do
   column :title, sortable: false
   column :secret_data if can? :manage, Post
+end
+```
+
+## Custom row class
+
+In order to add special class to table rows pass the proc object as a `:row_class` option
+of the `index` method.
+
+```ruby
+index row_class: ->elem { 'active' if elem.active? } do
+  # columns
 end
 ```
